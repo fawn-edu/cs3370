@@ -2,6 +2,7 @@
 // Fawn Sannar <10725695@uvu.edu>
 
 #include "frustum.hpp"
+#include "test_harness.hpp"
 #include <cstdio> // I would rather die than use cursed c++ streams
 
 int main() {
@@ -40,6 +41,7 @@ int main() {
 	} else if (h <= 0.0) { puts("Values must be positive"); return 2; }
 
 	const auto f = RectangularFrustum(w1, l1, w2, l2, h);
-	printf("Volume: %lf\nSurface area: %lf\n", f.volume(), f.surfaceArea());
-	return 0;
+	printf("Volume: %lf\nSurface area: %lf\n\n", f.volume(), f.surfaceArea());
+
+	return TestHarness{}.runAll() ? 0 : 1;
 }

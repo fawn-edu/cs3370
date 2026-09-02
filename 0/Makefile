@@ -9,6 +9,6 @@ run: 0.out
 	./0.out
 0.out: main.cpp
 	$(CXX) $(CXXFLAGS) -o $@ main.cpp
-main.cpp: rectangle.hpp frustum.hpp
+main.cpp: rectangle.hpp test_harness.hpp frustum.hpp
 clean:
 	rm -f ?.out*

@@ -2,14 +2,15 @@
 // Fawn Sannar <10725695@uvu.edu>
 
 #include <algorithm>
+#include <cstddef>
+#include <string>
 #include "CircBuf.h"
 
 using std::string;
 
-CircBuf::CircBuf(size_t reserve) {
-	cap = chunks_needed(reserve) * CHUNK;
-	buf = new char[cap];
-}
+CircBuf::CircBuf(size_t reserve)
+: cap{chunks_needed(reserve) * CHUNK}
+, buf{new char[cap]} {}
 
 CircBuf::~CircBuf() { delete[] buf; }
 

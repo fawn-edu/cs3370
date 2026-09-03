@@ -8,8 +8,8 @@
 // or something and I'm not taking any chances lol
 #pragma once
 
-#include <string>
 #include <cstddef>
+#include <string>
 
 class CircBuf {
 public:
@@ -28,7 +28,6 @@ public:
 private:
 	static constexpr size_t chunks_needed(size_t cnt); // Get the minimum number of chunks required to hold cnt items
 	void resize(size_t desired); // Resize the backing array such that it can fit desired number of chars
-
 	static constexpr size_t CHUNK = 8; // Minimum allocation unit
 
 	// Both head and tail must be modulo'd by cap to get the actual

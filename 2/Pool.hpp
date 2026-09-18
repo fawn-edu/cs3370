@@ -4,9 +4,8 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <cstdint>
+#include <cstdio> // <print> requires GCC 14+, Github codespaces use 13.3
 #include <new>
-#include <print> // Apparently std::print() and family refuse to print pointers, hence the below reinterpret_casts to uintptr_t
 #include <span>
 #include <stdexcept>
 #include <vector>
@@ -26,7 +25,7 @@ public:
 		if (freelist.empty()) throw std::bad_alloc{};
 		const auto i = freelist.back(); // 🪦 Here lies one hour of my time
 		freelist.pop_back();
-		if (trace_enabled) std::println("alloc @ {} ({:#x})", i, reinterpret_cast<std::uintptr_t>(&data[i]));
+		if (trace_enabled) printf("alloc @ %zu (%p)\n", i, &data[i]);
 		return reinterpret_cast<T*>(data.data()) + i;
 	}
 
@@ -37,17 +36,17 @@ public:
 		if (i < 0 || static_cast<std::size_t>(i) > data.size() / sizeof(T)) throw std::out_of_range{"ptr"};
 		// No double-frees allowed!!
 		if (std::ranges::find(freelist, i) != freelist.end()) throw std::invalid_argument{"ptr"};
-		if (trace_enabled) std::println("dealloc @ {} ({:#x})", i, reinterpret_cast<std::uintptr_t>(&data[i]));
+		if (trace_enabled) printf("dealloc @ %zu (%p)\n", static_cast<std::size_t>(i), &data[i]);
 		freelist.emplace_back(i);
 	}
 
 	void profile() const {
-		std::println(
-			"live={}, free={}, freelist={}",
+		printf(
+			"live=%zu, free=%zu, freelist=[",
 			data.size() / sizeof(T) - freelist.size(), // No need to store live npc count since it is trivially computable
-			freelist.size(),
-			freelist
+			freelist.size()
 		);
+		for (auto i = 0; i < freelist.size(); ++i) printf("%zu%s", i, i == freelist.size() - 1 ? "]\n" : ", ");
 	}
 private:
 	std::span<std::byte> data;

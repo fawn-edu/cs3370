@@ -18,14 +18,18 @@ T power(T base, unsigned exponent) {
 
 template <NumberLike T>
 T factorial(unsigned n) {
-	T r{1};
-	if (!n) return T{1};
-	for (auto i = 2u; i <= n; ++i) r *= i;
-	return r;
+	if (n < 2) return T{n};
+	T f{1};
+	for (auto i = 2u; i <= n; ++i) f *= i;
+	return f;
 }
 
 template <NumberLike T>
 T fibonacci(unsigned n) {
-	if (n < 2) return T{1};
-	return fibonacci<T>(n - 1) + fibonacci<T>(n - 2);
+	T a{0}, b{1};
+	while (n--) {
+		std::swap(a, b);
+		b += a;
+	}
+	return a;
 }

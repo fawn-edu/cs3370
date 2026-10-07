@@ -55,8 +55,8 @@
 #ifndef CS3370_PERF_BIGINT_H
 #define CS3370_PERF_BIGINT_H
 
-#include "bigint.hpp"
-#include "numeric.hpp"
+#include "bigint.h"
+#include "numeric.h"
 
 #include <chrono>
 #include <cstddef>

@@ -31,7 +31,6 @@ public:
 
 	// --- inspection ---------------------------------------------------
 	const unsigned char& operator[](std::size_t i) const; // i-th decimal digit from the right
-	unsigned char& operator[](std::size_t i); // i-th decimal digit from the right
 	std::size_t digitCount() const; // 0 has one digit
 	bool isNegative() const;
 	std::string toString() const;
@@ -42,6 +41,7 @@ public:
 
 	std::size_t capacity() const; // Exposes digits.capacity() because the report wants it
 private:
+	static constexpr std::strong_ordering cmp_mag(const BigInt& a, const BigInt& b);
 	static BigInt mul(const BigInt& lhs, const BigInt& rhs); // Karatsuba algorithm
 	void trim(); // Removes leading zeroes
 	unsigned char at(std::size_t i) const; // Like operator[], but returns 0 when out of bounds
@@ -65,7 +65,7 @@ struct std::formatter<BigInt> {
 	auto format(const BigInt& b, std::format_context& ctx) const {
 		std::string s{b.digits.begin(), b.digits.end()};
 		for (auto& c : s) c += '0';
-		if (b && b.negative) s += '-';
+		if (b.isNegative()) s += '-';
 		std::ranges::reverse(s);
 		return std::format_to(ctx.out(), "{}", s);
 	}

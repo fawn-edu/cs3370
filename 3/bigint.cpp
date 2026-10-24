@@ -49,7 +49,7 @@ BigInt& BigInt::operator+=(const BigInt& rhs) {
 		// Flipping lhs sign is cheaper than allocating a temporary
 		// rhs with negation operator
 		negative = !negative;
-		if (digitCount() > rhs.digitCount()) {
+		if (std::is_gteq(cmp_mag(*this, rhs))) {
 			// -A + +b => -(+A - +b) => -(A - b)
 			// +A + -b => -(-A - -b) => -(A - b)
 			*this -= rhs;
@@ -75,25 +75,26 @@ BigInt& BigInt::operator+=(const BigInt& rhs) {
 }
 
 BigInt& BigInt::operator-=(const BigInt& rhs) {
+	const auto m = cmp_mag(*this, rhs);
 	if (negative != rhs.negative) {
 		// Flipping lhs sign is cheaper than allocating a temporary
 		// rhs with negation operator
 		negative = !negative;
-		if (digitCount() > rhs.digitCount()) {
+		if (std::is_gteq(m)) {
 			// -A - +b => -(+A + +b) => -(A + b)
 			// +A - -b => -(-A + -b) => -(A + b)
-			*this -= rhs;
+			*this += rhs;
 			negative = !negative;
 		} else {
 			// -a - +B => +B + +a => B + a
 			// +a - -B => -B + -a => B + a
-			*this = rhs - *this;
+			*this = rhs + *this;
 		}
 		return *this;
 	}
 
 	// Always subtract the larger magnitude from the lesser
-	if (digitCount() < rhs.digitCount()) {
+	if (std::is_lt(m)) {
 		// a - B = -(B - a)
 		*this = rhs - *this;
 		negative = !negative;
@@ -139,7 +140,6 @@ BigInt BigInt::operator--(int) {
 }
 
 const unsigned char& BigInt::operator[](size_t i) const { return digits.at(i); }
-unsigned char& BigInt::operator[](size_t i) { return digits.at(i); }
 
 size_t BigInt::digitCount() const { return digits.size(); }
 
@@ -148,22 +148,15 @@ bool BigInt::isNegative() const { return *this && negative; }
 std::string BigInt::toString() const { return std::format("{}", *this); }
 
 bool operator==(const BigInt& a, const BigInt& b) {
-	if (a.digitCount() != b.digitCount()) return false;
+	if (a.digitCount() != b.digitCount() || a.isNegative() != b.isNegative()) return false;
 	return std::equal(a.digits.begin(), a.digits.end(), b.digits.begin());
 }
 
 std::strong_ordering operator<=>(const BigInt& a, const BigInt& b) {
-	const auto sign = !a.isNegative() <=> !b.isNegative();
-	if (sign != std::strong_ordering::equal) return sign;
-
-	const auto len = a.digitCount() <=> b.digitCount();
-	if (len != std::strong_ordering::equal) return len;
-
-	for (auto i = a.digitCount() - 1; i; --i) {
-		const auto digits = a.digits[i] <=> b.digits[i];
-		if (digits != std::strong_ordering::equal) return digits;
-	}
-	return std::strong_ordering::equal;
+	using std::is_neq;
+	if (auto o = !a.isNegative() <=> !b.isNegative(); is_neq(o)) return o;
+	const auto m = BigInt::cmp_mag(a, b);
+	return a.isNegative() ? 0 <=> m : m;
 }
 
 void BigInt::trim() {
@@ -177,6 +170,16 @@ void BigInt::trim() {
 unsigned char BigInt::at(size_t i) const { return i < digitCount() ? digits[i] : 0; }
 
 size_t BigInt::capacity() const { return digits.capacity(); }
+
+constexpr std::strong_ordering BigInt::cmp_mag(const BigInt& a, const BigInt& b) {
+	using std::is_neq;
+	if (auto o = a.digitCount() <=> b.digitCount(); is_neq(o)) return o;
+	for (auto i = a.digitCount() - 1;; --i) {
+		if (auto o = a.digits[i] <=> b.digits[i]; is_neq(o)) return o;
+		if (i == 0) break;
+	}
+	return std::strong_ordering::equal;
+}
 
 BigInt BigInt::mul(const BigInt& lhs, const BigInt& rhs) {
 	constexpr auto split = [](const BigInt& n, auto idx) -> std::pair<BigInt, BigInt> {
@@ -213,7 +216,11 @@ BigInt BigInt::mul(const BigInt& lhs, const BigInt& rhs) {
 
 	if (!lhs || !rhs) return 0;
 	// HACK: If the product can fit in a uint64_t, just do that directly
-	if (lhs < u32_max && rhs < u32_max) return from_u64(as_u64(lhs) * as_u64(rhs));
+	if (std::is_lt(cmp_mag(lhs, u32_max)) && std::is_lt(cmp_mag(rhs, u32_max))) {
+		auto result = from_u64(as_u64(lhs) * as_u64(rhs));
+		result.negative = lhs.negative != rhs.negative;
+		return result;
+	}
 	
 	const auto half = std::max(lhs.digitCount(), rhs.digitCount()) / 2;
 	auto [a, b] = split(lhs, half);

@@ -1,0 +1,4 @@
+# The handout appears to require these names which the top-level
+# gitignore doesn't already cover 
+tests*
+config*

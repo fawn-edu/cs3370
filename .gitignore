@@ -1,3 +1,6 @@
+tests*
+config*
+
 # ======================================================================
 # This file is derivative of the C++, Linux, Windows, and macOS
 # gitignores publicly available in the

@@ -39,7 +39,7 @@ I assumed that a file with less than three samples would fail the `i < data.size
 | # | Suggestion                                                   | Category    | Decision | Reason | Effect |
 |---|--------------------------------------------------------------|-------------|----------|--------|--------|
 | 1 | Guard against undersized input files                         | safety      | accept   | asan previously caught this | edge cases no longer crash |
-| 2 | Prevent signed integer overflow                              | safety      |          |        |        |
+| 2 | Prevent signed integer overflow                              | safety      | accept   | I did already consider this for P5 so I agree | extreme values are handled correctly; smoothing performance suffers significantly |
 | 3 | Optimize integer file reading                                | performance |          |        |        |
 | 4 | Reduce the number of printing timers                         | performance |          |        |        |
 | 5 | Avoid unnecesary allocation when smoothing                   | performance |          |        |        |

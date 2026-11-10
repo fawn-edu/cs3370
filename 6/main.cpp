@@ -37,11 +37,11 @@ int main(int argc, char *argv[]) {
 		);
 		ranges::sort(files);
 		for (const auto &f : files) {
-			vector<int> data;
+			vector<long long> data;
 			{
 				StageTimer t{"reading"};
 				ifstream file{f.path(), ios::in};
-				data = vector<int>{istream_iterator<int>{file}, {}};
+				data = vector<long long>{istream_iterator<int>{file}, {}};
 				// Failbit gets set if there happens to be a trailing
 				// newline; ignore such cases
 				if ((file.fail() && !file.eof())) {
@@ -53,11 +53,11 @@ int main(int argc, char *argv[]) {
 				// any fewer can't have pulses anyways
 				if (data.size() < 3) continue;
 			}
-			vector<int> smoothed;
+			vector<long long> smoothed;
 			{
 				StageTimer t{"smoothing"};
 				ranges::transform(data, data.begin(), negate{});
-				smoothed = vector<int>{data};
+				smoothed = vector<long long>{data};
 				for (auto i = 3u; i < data.size() - 3; ++i) {
 					smoothed[i] = (3 * (data[i - 1] + data[i] + data[i + 1])
 						+ 2 * (data[i - 2] + data[i + 2])
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
 					if (next - it <= static_cast<size_t>(params.pulse_delta)) {
 						const auto peakpos = ranges::max_element(span{&smoothed[it], &smoothed[end]});
 						const auto thresh = params.drop_ratio * static_cast<double>(*peakpos);
-						const auto nbelow = count_if(&*peakpos, &smoothed[next], [thresh](int n){ return n < thresh; });
+						const auto nbelow = count_if(&*peakpos, &smoothed[next], [thresh](long long n){ return n < thresh; });
 						if (nbelow > params.below_drop_ratio) {
 							{
 								StageTimer t{"printing"};
@@ -107,10 +107,10 @@ int main(int argc, char *argv[]) {
 				}
 				// I would have used std::reduce() if the rubric didn't
 				// explicitly call for std::accumulate()
-				int a;
+				long long a;
 				{
 					StageTimer t{"area"};
-					a = accumulate(&data[it], &data[min(end, data.size())], 0);
+					a = accumulate(&data[it], &data[min(end, data.size())], 0ll);
 				}
 				{
 					StageTimer t{"printing"};
@@ -118,10 +118,10 @@ int main(int argc, char *argv[]) {
 				}
 			}
 			// Final peak cannot be piggyback by definition
-			int a;
+			long long a;
 			{
 				StageTimer t{"area"};
-				a = accumulate(&data[pulses.back()], &data[min(pulses.back() + params.width, data.size())], 0);
+				a = accumulate(&data[pulses.back()], &data[min(pulses.back() + params.width, data.size())], 0ll);
 			}
 			{
 				StageTimer t{"printing"};

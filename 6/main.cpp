@@ -44,10 +44,14 @@ int main(int argc, char *argv[]) {
 				data = vector<int>{istream_iterator<int>{file}, {}};
 				// Failbit gets set if there happens to be a trailing
 				// newline; ignore such cases
-				if (file.fail() && !file.eof()) {
+				if ((file.fail() && !file.eof())) {
 					println(cerr, "Invalid file: {}\n", f.path().filename().string());
 					continue;
 				}
+				// Skip files containing less than 3 samples
+				// Pulses can only occur over 3 samples so files with
+				// any fewer can't have pulses anyways
+				if (data.size() < 3) continue;
 			}
 			vector<int> smoothed;
 			{

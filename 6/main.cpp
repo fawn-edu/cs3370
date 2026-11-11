@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
 				long long a;
 				{
 					StageTimer t{"area"};
-					a = accumulate(&data[it], &data[min(end, data.size())], 0ll);
+					a = accumulate(&data[it], &data[end], 0ll);
 				}
 				msg.append(format("{} ({})\n", it, a));
 			}

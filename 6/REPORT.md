@@ -43,8 +43,8 @@ I assumed that a file with less than three samples would fail the `i < data.size
 | 3 | Optimize integer file reading                                | performance | accept   | Greatest potential performance increase | Median reading phase is 514ms down from 1359ms |
 | 4 | Reduce the number of printing timers                         | performance | accept   | The clanker put a mutex in the timer totals; every timer not created is a mutex not interacted with | Median printing phase is 3.7ms down from 86ms |
 | 5 | Avoid unnecesary allocation when smoothing                   | performance | reject   | Makes smoothing phase perform worse | Median smoothing phase is 49ms up from 18ms |
-| 6 | Validate configuration parameters before using them as sizes | safety      |          |        |        |
-| 7 | Avoid redundant bounds calculations                          | readability |          |        |        |
+| 6 | Validate configuration parameters before using them as sizes | safety      | reject   | Parameters are already validated |        |
+| 7 | Avoid redundant bounds calculations                          | readability | accept   | `next <= end < data.size()` is an invariant |        |
 | 8 | Make the data-processing stages easier to isolate            | readability |          |        |        |
 
 ## 4. Final timing

@@ -5,11 +5,9 @@
 #include <exception> // exception
 #include <filesystem> // directory_iterator
 #include <cstdio>
-#include <iostream> // cerr
 #include <iterator> // istream_iterator
 #include <numeric> // accumulate
 #include <optional>
-#include <print>
 #include <span>
 #include <vector>
 #include "pulse_config.h"
@@ -35,7 +33,7 @@ span<char> read_file(const char *name) {
 
 int main(int argc, char *argv[]) {
 	if (argc != 2) {
-		println(cerr, "Usage: {} <file.ini>", argv[0]);
+		fprintf(stderr, "Usage: %s <file.ini>\n", argv[0]);
 		return 1;
 	}
 	try {
@@ -59,7 +57,7 @@ int main(int argc, char *argv[]) {
 				StageTimer t{"reading"};
 				auto buf = read_file(f.path().string().c_str());
 				if (buf.empty()) {
-					println(cerr, "Invalid file: {}\n", f.path().filename().string());
+					fprintf(stderr, "Invalid file: %s\n", f.path().filename().string().c_str());
 					continue;
 				}
 				// Parse integers, separated by whitespace
@@ -81,7 +79,7 @@ int main(int argc, char *argv[]) {
 				}
 				delete[] buf.data();
 				if (bad) {
-					println(cerr, "Invalid file: {}\n", f.path().filename().string());
+					fprintf(stderr, "Invalid file: %s\n\n", f.path().filename().string().c_str());
 					continue;
 				}
 				// Skip files containing less than 3 samples
@@ -152,15 +150,15 @@ int main(int argc, char *argv[]) {
 			msg.append(format("{} ({})\n", pulses.back(), a));
 			{
 				StageTimer t{"printing"};
-				println("{}", msg);
+				puts(msg.c_str());
 			}
 		}
 		print_stage_report();
 	} catch (const ConfigFileError &e) {
-		println(cerr, "{}", e.what());
+		fprintf(stderr, "%s", e.what());
 		return 1;
 	} catch (const exception &e) {
-		println(cerr, "Unexpected error: {}", e.what());
+		fprintf(stderr, "Unexpected error: %s", e.what());
 		return 2;
 	}
 }

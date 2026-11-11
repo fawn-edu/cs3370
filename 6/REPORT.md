@@ -40,7 +40,7 @@ I assumed that a file with less than three samples would fail the `i < data.size
 |---|--------------------------------------------------------------|-------------|----------|--------|--------|
 | 1 | Guard against undersized input files                         | safety      | accept   | asan previously caught this | edge cases no longer crash |
 | 2 | Prevent signed integer overflow                              | safety      | accept   | I did already consider this for P5 so I agree | extreme values are handled correctly; smoothing performance suffers significantly |
-| 3 | Optimize integer file reading                                | performance |          |        |        |
+| 3 | Optimize integer file reading                                | performance | accept   | Greatest potential performance increase | Median reading phase is 514ms down from 1359ms |
 | 4 | Reduce the number of printing timers                         | performance |          |        |        |
 | 5 | Avoid unnecesary allocation when smoothing                   | performance |          |        |        |
 | 6 | Validate configuration parameters before using them as sizes | safety      |          |        |        |

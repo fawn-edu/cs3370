@@ -1,9 +1,10 @@
 #include <algorithm> // copy_if, max_element
+#include <cassert>
+#include <charconv>
 #include <cstddef> // size_t
 #include <exception> // exception
 #include <filesystem> // directory_iterator
-#include <fstream>
-#include <functional> // negate
+#include <cstdio>
 #include <iostream> // cerr
 #include <iterator> // istream_iterator
 #include <numeric> // accumulate
@@ -15,6 +16,22 @@
 #include "stage_timer.hpp" // slop
 
 using namespace std;
+
+// Returns a span<char> containing the entire contents of a file using
+// C-style IO
+span<char> read_file(const char *name) {
+	FILE *file = fopen(name, "rb");
+	if (!file) return {};
+	[[maybe_unused]] int err = 0;
+	err = fseek(file, 0, SEEK_END); assert(err == 0);
+	long fsize = ftell(file); assert(fsize != -1);
+	auto fsz = static_cast<size_t>(fsize);
+	err = fseek(file, 0, SEEK_SET); assert(err == 0);
+	char *buf = new char[fsize];
+	[[maybe_unused]] size_t cnt = fread(buf, sizeof buf[0], fsize, file); assert(cnt == fsz);
+	(void)fclose(file);
+	return {buf, fsz};
+}
 
 int main(int argc, char *argv[]) {
 	if (argc != 2) {
@@ -40,11 +57,30 @@ int main(int argc, char *argv[]) {
 			vector<long long> data;
 			{
 				StageTimer t{"reading"};
-				ifstream file{f.path(), ios::in};
-				data = vector<long long>{istream_iterator<int>{file}, {}};
-				// Failbit gets set if there happens to be a trailing
-				// newline; ignore such cases
-				if ((file.fail() && !file.eof())) {
+				auto buf = read_file(f.path().string().c_str());
+				if (buf.empty()) {
+					println(cerr, "Invalid file: {}\n", f.path().filename().string());
+					continue;
+				}
+				// Parse integers, separated by whitespace
+				bool bad = false;
+				for (char *c = buf.data(), *end = buf.data() + buf.size(); c < end;) {
+					while (isspace(*c) && c < end) ++c;
+					if (c == end) break;
+					char *tail = c;
+					while (!isspace(*c) && c < end) ++c;
+					char *head = c;
+					int v;
+					auto res = from_chars(tail, head, v);
+					if (res.ec != errc{}) {
+						bad = true;
+						break;
+					}
+					// Negate sample before storing in the first place
+					data.emplace_back(-static_cast<long long>(v));
+				}
+				delete[] buf.data();
+				if (bad) {
 					println(cerr, "Invalid file: {}\n", f.path().filename().string());
 					continue;
 				}
@@ -56,7 +92,6 @@ int main(int argc, char *argv[]) {
 			vector<long long> smoothed;
 			{
 				StageTimer t{"smoothing"};
-				ranges::transform(data, data.begin(), negate{});
 				smoothed = vector<long long>{data};
 				for (auto i = 3u; i < data.size() - 3; ++i) {
 					smoothed[i] = (3 * (data[i - 1] + data[i] + data[i + 1])

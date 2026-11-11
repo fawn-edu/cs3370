@@ -49,16 +49,35 @@ I assumed that a file with less than three samples would fail the `i < data.size
 
 ## 4. Final timing
 
-| Stage | Baseline ms | Final ms | Change |
-|-------|-------------|----------|--------|
+| Stage           | Baseline ms | Final ms | Change |
+|-----------------|------------:|---------:|-------:|
+| reading         |   1358.9500 | 534.4590 |  2.54x |
+| smoothing       |     18.7148 |  53.4569 |  0.35x |
+| detection       |     12.6677 |  27.4625 |  0.46x |
+| piggyback test  |      2.9813 |   2.9932 |  0.99x |
+| area            |      4.2826 |   7.9801 |  0.54x |
+| printing        |     86.9028 |   2.7207 | 31.94x |
 
 ## 5. Reflection
 
 > 1. How did your prediction compare with the timing report? Where does the time actually go?
 
+My primary prediction was spot-on. Initially, reading in files took (92% of the runtime); after ditching streams and iterators for C-style I/O, it now only takes 534ms (85% of the runtime).
+
+My secondary prediction was not so accurate. Printing was initially the second longest phase, but that certainly had more to do with the way I was timing it and the fact that every timer's destructor acquired a mutex. Circumventing that actually brought it down to be the shortest phase of all.
+
+The smoothing is actually the second longest phase; doing the arithmetic in `long long` rather than `int` harms performance quite a bit in all non-I/O phases. I'm not sure if this is because less data fits in the cache or another reason.
+
 > 2. Choose one suggestion you rejected, or one that turned out to be wrong. What evidence decided it?
+
+I rejected the suggestion to not initial construct `smoothed` as a copy of `data`. I constructed `smoothed` in this way before since I thought it wouldn't matter for smaller files, but some of the generated test files in this assignment have a million samples, so I thought this might actually be an optimization worth doing. I changed it so that it first constructed `smoothed` from `data[0..3]`, reserved `data.size()` elements, then after the smoothing appended `data[data.size()-3..data.size()]`. I was surprised to find that even with a million samples, this approach was significantly slower than my previous lazy method (smoothing phase went up to 49ms from 18ms). Weird.
+
+This actually has less of a performance impact now that arithmetic is done in `long long`, but it still makes the smoothing phase 5–9ms slower, so I maintian my rejection.
 
 > 3. Did `gen_data.cpp` or `stage_timer.h` contain a mistake? How did you find it, or how did you check that there was none?
 
+I did not see any logic mistakes in either generated source file, only some questionable design decisions, such as assuming my program was multithreaded and acquiring a mutex every time a timer is destroyed.
+
 > 4. Which suggestion taught you something about C++ that you did not know before?
 
+I learned how poorly streams and iterators perform compared to classic C-style I/O. I assumed there was a little overhead, but I had no idea it was this bad, lol.

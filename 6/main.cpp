@@ -117,10 +117,7 @@ int main(int argc, char *argv[]) {
 				if (j) pulses.emplace_back(*j); // Pulse began but did not end
 				if (pulses.empty()) continue; // Skip files with no pulses
 			}
-			{
-				StageTimer t{"printing"};
-				println("{}:", f.path().filename().string());
-			}
+			auto msg = format("{}:\n", f.path().filename().string());
 			for (auto i = 0u; i < pulses.size() - 1; ++i) {
 				const auto &it = pulses[i], &next = pulses[1 + i];
 				const auto end = min<size_t>(it + params.width, next);
@@ -132,10 +129,7 @@ int main(int argc, char *argv[]) {
 						const auto thresh = params.drop_ratio * static_cast<double>(*peakpos);
 						const auto nbelow = count_if(&*peakpos, &smoothed[next], [thresh](long long n){ return n < thresh; });
 						if (nbelow > params.below_drop_ratio) {
-							{
-								StageTimer t{"printing"};
-								println("Found piggyback at {}", it);
-							}
+							msg.append(format("Found piggyback at {}\n", it));
 							continue;
 						}
 					}
@@ -147,10 +141,7 @@ int main(int argc, char *argv[]) {
 					StageTimer t{"area"};
 					a = accumulate(&data[it], &data[min(end, data.size())], 0ll);
 				}
-				{
-					StageTimer t{"printing"};
-					println("{} ({})", it, a);
-				}
+				msg.append(format("{} ({})\n", it, a));
 			}
 			// Final peak cannot be piggyback by definition
 			long long a;
@@ -158,9 +149,10 @@ int main(int argc, char *argv[]) {
 				StageTimer t{"area"};
 				a = accumulate(&data[pulses.back()], &data[min(pulses.back() + params.width, data.size())], 0ll);
 			}
+			msg.append(format("{} ({})\n", pulses.back(), a));
 			{
 				StageTimer t{"printing"};
-				println("{} ({})\n", pulses.back(), a);
+				println("{}", msg);
 			}
 		}
 		print_stage_report();

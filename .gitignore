@@ -1,3 +1,9 @@
+pulse
+pulse_debug
+gen_data
+bench/
+edge/
+
 # ======================================================================
 # This file is derivative of the C++, Linux, Windows, and macOS
 # gitignores publicly available in the

@@ -45,7 +45,7 @@ I assumed that a file with less than three samples would fail the `i < data.size
 | 5 | Avoid unnecesary allocation when smoothing                   | performance | reject   | Makes smoothing phase perform worse | Median smoothing phase is 49ms up from 18ms |
 | 6 | Validate configuration parameters before using them as sizes | safety      | reject   | Parameters are already validated |        |
 | 7 | Avoid redundant bounds calculations                          | readability | accept   | `next <= end < data.size()` is an invariant |        |
-| 8 | Make the data-processing stages easier to isolate            | readability |          |        |        |
+| 8 | Make the data-processing stages easier to isolate            | readability | reject   | `main()` is 130 loc, it's fine as-is |        |
 
 ## 4. Final timing
 
